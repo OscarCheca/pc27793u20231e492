@@ -1,7 +1,13 @@
 package com.medisupply.platform.u20231e492.shared.infrastructure.documentation.openapi.configuration;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +17,7 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfiguration {
-
+    // Properties
     @Value("${spring.application.name}")
     String applicationName;
 
@@ -22,14 +28,53 @@ public class OpenApiConfiguration {
     String applicationVersion;
 
     @Bean
-    public OpenAPI mediSupplyPlatformOpenApi() {
-        return new OpenAPI()
+    public OpenAPI learningPlatformOpenApi() {
+
+        // General configuration
+        var openApi = new OpenAPI();
+        openApi
                 .info(new Info()
                         .title(this.applicationName)
                         .description(this.applicationDescription)
-                        .version(this.applicationVersion))
-                .servers(List.of(new Server()
+                        .version(this.applicationVersion)
+                        .contact(new Contact()
+                                .name("MeddiSuply Support")
+                                .email("support@meddisuply.com")
+                                .url("https://meddisuply.com/support"))
+                        .license(new License()
+                                .name("Apache 2.0")
+                                .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
+                .externalDocs(new ExternalDocumentation()
+                        .description("MeddiSuply Platform wiki Documentation")
+                        .url("https://meddi-supply-platform.wiki.github.io/docs"));
+
+        // Add server configurations
+        openApi.servers(List.of(
+                new Server()
                         .url("http://localhost:8080")
-                        .description("Local Development Environment")));
+                        .description("Local Development Environment"),
+                new Server()
+                        .url("https://staging-api.acme-learning.com")
+                        .description("Staging Environment"),
+                new Server()
+                        .url("https://api.acme-learning.com")
+                        .description("Production Environment")
+        ));
+
+        // Add a security scheme
+        final String securitySchemeName = "bearerAuth";
+
+        openApi.addSecurityItem(new SecurityRequirement()
+                        .addList(securitySchemeName))
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description("JWT Bearer token for API authentication")));
+
+        return openApi;
     }
 }
